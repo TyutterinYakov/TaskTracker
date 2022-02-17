@@ -1,9 +1,9 @@
-package tracker.dao;
+package tracker.store.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import tracker.entity.TaskStateEntity;
+import tracker.store.entities.TaskStateEntity;
 
 @Repository
 public interface TaskStateRepository extends JpaRepository<TaskStateEntity, Long>{

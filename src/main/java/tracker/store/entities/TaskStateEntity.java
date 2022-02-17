@@ -1,4 +1,4 @@
-package tracker.entity;
+package tracker.store.entities;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
