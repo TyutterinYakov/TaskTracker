@@ -29,8 +29,13 @@ public class ProjectController {
 		this.projectService = projectService;
 	}
 	
+	@GetMapping("/")
+	public List<ProjectDto> fetchProjects() {
+		return projectService.getAllProjectsByFilter(Optional.empty());
+		
+	}
 	@GetMapping("/{prefix_name}")
-	public List<ProjectDto> fetchProjects(
+	public List<ProjectDto> fetchProjectsByName(
 			@PathVariable(value="prefix_name", required = false) 
 			Optional<String> optionalPrefixName) {
 		return projectService.getAllProjectsByFilter(optionalPrefixName);

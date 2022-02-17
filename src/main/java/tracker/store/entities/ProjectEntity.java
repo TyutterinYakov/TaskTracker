@@ -26,9 +26,8 @@ public class ProjectEntity {
 	@Column(unique = true)
 	private String name;
 	private LocalDateTime createdAt = LocalDateTime.now();
-	@OneToMany(cascade=CascadeType.REMOVE, fetch=FetchType.LAZY)
-//	@JoinColumn(name="project_id", referencedColumnName = "project_id")
-	private List<TaskStateEntity> states = new ArrayList<>();
+	@OneToMany(cascade=CascadeType.REMOVE, fetch=FetchType.LAZY, mappedBy="project")
+	private List<TaskStateEntity> taskStates = new ArrayList<>();
 	
 	public ProjectEntity() {
 		super();
@@ -55,11 +54,11 @@ public class ProjectEntity {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
-	public List<TaskStateEntity> getStates() {
-		return states;
+	public List<TaskStateEntity> getTaskStates() {
+		return taskStates;
 	}
-	public void setStates(List<TaskStateEntity> states) {
-		this.states = states;
+	public void setTaskStates(List<TaskStateEntity> taskStates) {
+		this.taskStates = taskStates;
 	}
 	
 	

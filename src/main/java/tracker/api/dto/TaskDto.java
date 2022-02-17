@@ -23,13 +23,15 @@ public class TaskDto {
 		super();
 	}
 
-	public TaskDto(Long taskId, String name, LocalDateTime createdAt, String description) {
+	public TaskDto(Long taskId, String name, LocalDateTime createdAt,
+			String description) {
 		super();
 		this.taskId = taskId;
 		this.name = name;
 		this.createdAt = createdAt;
 		this.description = description;
 	}
+
 
 	public Long getTaskId() {
 		return taskId;

@@ -3,6 +3,7 @@ package tracker.store.entities;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -14,7 +15,11 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import org.springframework.lang.Nullable;
+
 
 @Entity
 @Table(name="task_states")
@@ -25,7 +30,12 @@ public class TaskStateEntity {
 	@Column(name="task_state_id")
 	private Long taskStateId;
 	private String name;
-	private Long ordinal;
+	@OneToOne
+	@JoinColumn(nullable = true)
+	private TaskStateEntity leftTaskState=null;
+	@OneToOne
+	@JoinColumn(nullable = true)
+	private TaskStateEntity rigthTaskState=null;
 	private LocalDateTime createdAt = LocalDateTime.now();
 	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.EAGER)
 	private ProjectEntity project;
@@ -33,6 +43,7 @@ public class TaskStateEntity {
 //	@JoinColumn(name="task_state_id", referencedColumnName = "task_state_id")
 	private List<TaskEntity> tasks = new ArrayList<>();
 	
+
 	
 	public Long getTaskStateId() {
 		return taskStateId;
@@ -40,17 +51,24 @@ public class TaskStateEntity {
 	public void setTaskStateId(Long taskStateId) {
 		this.taskStateId = taskStateId;
 	}
+	
+	public Optional<TaskStateEntity> getLeftTaskState() {
+		return Optional.ofNullable(leftTaskState);
+	}
+	public void setLeftTaskState(TaskStateEntity leftTaskState) {
+		this.leftTaskState = leftTaskState;
+	}
+	public Optional<TaskStateEntity> getRigthTaskState() {
+		return Optional.ofNullable(rigthTaskState);
+	}
+	public void setRigthTaskState(TaskStateEntity rigthTaskState) {
+		this.rigthTaskState = rigthTaskState;
+	}
 	public String getName() {
 		return name;
 	}
 	public void setName(String name) {
 		this.name = name;
-	}
-	public Long getOrdinal() {
-		return ordinal;
-	}
-	public void setOrdinal(Long ordinal) {
-		this.ordinal = ordinal;
 	}
 	public LocalDateTime getCreatedAt() {
 		return createdAt;
@@ -70,6 +88,7 @@ public class TaskStateEntity {
 	public void setProject(ProjectEntity project) {
 		this.project = project;
 	}
+	
 	
 	
 	

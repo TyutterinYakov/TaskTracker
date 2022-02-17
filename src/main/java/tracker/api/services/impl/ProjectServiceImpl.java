@@ -74,18 +74,20 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 	
 	@Override
+	@Transactional
 	public List<ProjectDto> getAllProjectsByFilter(Optional<String> optionalPrefixName) {
 		
 		optionalPrefixName = optionalPrefixName.filter(prefixName -> !prefixName.trim().isEmpty());
+//		System.out.println(optionalPrefixName.get());
 		
 		Stream<ProjectEntity> projectStream = optionalPrefixName
 				.map(projectDao::streamAllByNameStartsWithIgnoreCase)
-				.orElseGet((projectDao::streamAll));
+				.orElseGet((projectDao::streamAllBy));
 		
 //		if(optionalPrefixName.isPresent()) {
 //			projectStream = projectDao.streamAllByNameStartsWithIgnoreCase(optionalPrefixName.get());
 //		} else {
-////			projectStream = projectDao.streamAll();
+//			projectStream = projectDao.streamAll();
 //		}
 		return projectStream.map(
 				projectDtoFactory::makeProjectDto)
@@ -98,6 +100,22 @@ public class ProjectServiceImpl implements ProjectService {
 		projectDao.findById(id);
 	}
 	
+	@Override
+	public ProjectEntity findProjectById(Long id) {
+		if(id==0||id==null) {
+			throw new BadRequestException("Id is empty or 0");
+		}
+		return projectDao
+				.findById(id)
+				.orElseThrow(()->
+					new NotFoundException(
+							String.format(
+								"Project id: \"%s\" not found",
+								id
+							)
+					)
+				);
+	}
 	
 	private void checkAlreadyProjectName(String name) {
 		checkNameIsEmpty(name);
@@ -109,21 +127,11 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 	
 	private void checkNameIsEmpty(String name) {
-		if(name.trim().isEmpty()) {
+		if(name.isBlank()) {
 			throw new BadRequestException("Project name is empty");
 		}
 	}
 	
-	private ProjectEntity findProjectById(Long id) {
-		if(id==0||id==null) {
-			throw new BadRequestException("Id is empty or 0");
-		}
-		return projectDao
-		.findById(id)
-		.orElseThrow(()->
-			new NotFoundException(String.format("Project id: \"%s\" not found", id))
-		);
-	}
 
 
 

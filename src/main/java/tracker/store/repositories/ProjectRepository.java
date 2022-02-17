@@ -15,5 +15,5 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long>{
 	
 	Stream<ProjectEntity> streamAllByNameStartsWithIgnoreCase(String name);
 
-	Stream<ProjectEntity> streamAll();
+	Stream<ProjectEntity> streamAllBy();
 }
