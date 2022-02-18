@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +30,7 @@ public class TaskStateController {
 	public static final String CREATE_TASK_STATE = "/api/projects/{project_id}/task-states";
 	public static final String UPDATE_TASK_STATE = "/api/task-states/{task_state_id}";
 	public static final String CHANGE_TASK_STATE_POSITION = "/api/task-states/{task_state_id}/position/change";
+	public static final String DELETE_TASK_STATE = "/api/task-states/{task_state_id}";
 	
 	
 	
@@ -60,6 +62,12 @@ public class TaskStateController {
 			@RequestParam(value="rigth_task_state_id", required=false) Long rigthTaskStateId,
 			@PathVariable("task_state_id") Long taskStateId) {
 		return taskStateService.changeTaskStatePosition(leftTaskStateId, rigthTaskStateId, taskStateId);
+	}
+	
+	@DeleteMapping(DELETE_TASK_STATE)
+	public String deleteTaskState(@PathVariable("task_state_id") Long taskStateId) {
+		taskStateService.deleteTaskStateById(taskStateId);
+		return "Task state deleted";
 	}
 	
 	

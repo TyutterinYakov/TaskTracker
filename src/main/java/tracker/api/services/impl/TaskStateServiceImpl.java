@@ -78,9 +78,6 @@ public class TaskStateServiceImpl implements TaskStateService {
 	@Transactional
 	public TaskStateDto updateTaskStateNameById(Long taskStateId, String taskStateName) {
 		checkTaskStateNameEmpty(taskStateName);
-		if(taskStateId==null||taskStateId==0) {
-			throw new BadRequestException("Task state id is null or 0");
-		}
 		TaskStateEntity taskState = findTaskStateById(taskStateId);
 		if(!taskStateName.equalsIgnoreCase(taskState.getName())) {
 			checkTaskStateNameForProject(taskState.getProject(), taskStateName);
@@ -98,60 +95,88 @@ public class TaskStateServiceImpl implements TaskStateService {
 		
 		TaskStateEntity oldTaskState = findTaskStateById(taskStateId);
 		
-		if(oldTaskState.getProject().getTaskStates().size()<=1||(leftTaskStateId+rigthTaskStateId)==0) {
-			throw new BadRequestException("Нельзя перемещать единственный Task state");
+		if(oldTaskState.getProject().getTaskStates().size()<=1||
+				leftTaskStateId==rigthTaskStateId||
+				taskStateId==leftTaskStateId||
+				taskStateId==rigthTaskStateId
+				) {
+			throw new BadRequestException("Нельзя перемещать "
+					+ "единственный Task state или на это место перемещение невозможно");
 		}
+		Optional<TaskStateEntity> newLeftTaskStateOptional = 
+				taskStateDao.findByTaskStateIdAndProject(leftTaskStateId, oldTaskState.getProject());
+		Optional<TaskStateEntity> newRigthTaskStateOptional = 
+				taskStateDao.findByTaskStateIdAndProject(rigthTaskStateId, oldTaskState.getProject());
+		boolean check=false;
+		boolean extreamCheck = false;
 		
-		Optional<TaskStateEntity> leftTaskStateOptional = taskStateDao.findById(leftTaskStateId);
-		Optional<TaskStateEntity> rigthTaskStateOptional = taskStateDao.findById(rigthTaskStateId);
-		Long rigthId=null;
-		Long leftId=null;
-		
-		if(leftTaskStateOptional.isPresent()) {
-			if(leftTaskStateOptional.get().getRigthTaskState().isPresent()) {
-				rigthId = leftTaskStateOptional.get().getRigthTaskState().orElse(null).getTaskStateId();
+		if(newLeftTaskStateOptional.isPresent()) {
+			if(newLeftTaskStateOptional.get().getRigthTaskState().isPresent()) {
+				if(newLeftTaskStateOptional.get()
+						.getRigthTaskState().get()
+						.getTaskStateId()==rigthTaskStateId) {
+					check=true;
+				}
+			} else {
+				extreamCheck=true;
+			}
+		} else if(leftTaskStateId==0) {
+			extreamCheck=true;
+		}
+		if(!check) {
+			if(newRigthTaskStateOptional.isPresent()) {
+				if(newRigthTaskStateOptional.get().getLeftTaskState().isPresent()) {
+					if(newRigthTaskStateOptional.get()
+							.getLeftTaskState().get()
+							.getTaskStateId()==leftTaskStateId) {
+						check=true;
+					}
+				} else if(extreamCheck) {
+					check=true;
+				}
+			} else if(rigthTaskStateId==0) {
+				check=true;
 			}
 		}
-		if(rigthTaskStateOptional.isPresent()) {
-			if(rigthTaskStateOptional.get().getLeftTaskState().isPresent()) {
-				leftId = rigthTaskStateOptional.get().getLeftTaskState().get().getTaskStateId();
+		if(check) {
+			Optional<TaskStateEntity> oldLeftTaskStateOptional = oldTaskState.getLeftTaskState();
+			Optional<TaskStateEntity> oldRightTaskStateOptional = oldTaskState.getRigthTaskState();
+			if(oldLeftTaskStateOptional.isPresent()) {
+				oldLeftTaskStateOptional.get().setRigthTaskState(oldRightTaskStateOptional.orElse(null));
 			}
-		}
-		
-		if(rigthId==leftId) {
-			
-			Optional<TaskStateEntity> taskStateOptionalLeft = oldTaskState.getLeftTaskState();
-			Optional<TaskStateEntity> taskStateOptionalRigth = oldTaskState.getRigthTaskState();
-			if(taskStateOptionalLeft.isPresent()) {
-				taskStateOptionalLeft.get().setRigthTaskState(taskStateOptionalRigth.orElse(null));
+			if(oldRightTaskStateOptional.isPresent()) {
+				oldRightTaskStateOptional.get().setLeftTaskState(oldLeftTaskStateOptional.orElse(null));
 			}
-			if(taskStateOptionalRigth.isPresent()) {
-				taskStateOptionalRigth.get().setLeftTaskState(taskStateOptionalLeft.orElse(null));
-			}
-			TaskStateEntity taskStateLeft =null; 
-			taskStateLeft = taskStateDao.findByTaskStateIdAndProject(leftTaskStateId, oldTaskState.getProject()).orElse(null);
-				if(taskStateLeft!=null) {
-					taskStateLeft.setRigthTaskState(oldTaskState);
+				if(newLeftTaskStateOptional.isPresent()) {
+					newLeftTaskStateOptional.get().setRigthTaskState(oldTaskState);
 				}
 			TaskStateEntity changeTaskState = oldTaskState; 
-			changeTaskState.setLeftTaskState(taskStateLeft);
-			TaskStateEntity taskStateRigth =null;
-			taskStateRigth = taskStateDao.findByTaskStateIdAndProject(rigthTaskStateId, oldTaskState.getProject()).orElse(null);
-				if(taskStateRigth!=null) {
-					taskStateRigth.setLeftTaskState(oldTaskState);
+			changeTaskState.setLeftTaskState(newLeftTaskStateOptional.orElse(null));
+				if(newRigthTaskStateOptional.isPresent()) {
+					newRigthTaskStateOptional.get().setLeftTaskState(oldTaskState);
 				}
-			changeTaskState.setRigthTaskState(taskStateRigth);
-			
+			changeTaskState.setRigthTaskState(newRigthTaskStateOptional.orElse(null));
 			return taskStateDtoFactory.makeTaskStateDto(changeTaskState);
 		}
-		
 		throw new BadRequestException("Ошибка при перемещении");
-		
 	}
 	
 	
-	
-	
+	@Override
+	@Transactional
+	public void deleteTaskStateById(Long taskStateId) {
+		TaskStateEntity taskState = findTaskStateById(taskStateId);
+		Optional<TaskStateEntity> optionalLeftTaskState = taskState.getLeftTaskState();
+		Optional<TaskStateEntity> optionalRigthTaskState = taskState.getRigthTaskState();
+		
+		if (optionalLeftTaskState.isPresent()) {
+			optionalLeftTaskState.get().setRigthTaskState(optionalRigthTaskState.orElse(null));
+		}
+		if (optionalRigthTaskState.isPresent()) {
+			optionalRigthTaskState.get().setLeftTaskState(optionalLeftTaskState.orElse(null));
+		}
+		taskStateDao.deleteById(taskStateId);
+	}
 	
 	
 	private void checkTaskStateNameForProject(ProjectEntity project, String taskStateName) {
@@ -175,6 +200,9 @@ public class TaskStateServiceImpl implements TaskStateService {
 	}
 	
 	private TaskStateEntity findTaskStateById(Long taskStateId) {
+		if(taskStateId==null||taskStateId==0) {
+			throw new BadRequestException("Task state id is null or 0");
+		}
 		return taskStateDao.findById(taskStateId).orElseThrow(()->
 		new NotFoundException(String.format(
 				"Task State for id \"%s\" not found", 
@@ -183,6 +211,7 @@ public class TaskStateServiceImpl implements TaskStateService {
 		)
 );
 	}
+
 
 
 

@@ -14,4 +14,6 @@ public interface TaskStateService {
 
 	TaskStateDto changeTaskStatePosition(Long leftTaskStateId, Long rigthTaskStateId, Long taskStateId);
 
+	void deleteTaskStateById(Long taskStateId);
+
 }
